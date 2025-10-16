@@ -17,7 +17,7 @@ class Note {
     required this.updatedAt,
     this.isCompleted = false,
     this.imagePath,
-    this.label = 'Umum',
+    this.label = 'General',
     this.color = '#2196F3',
   });
 
@@ -56,3 +56,5 @@ class Note {
     return 'Note{id: $id, title: $title, isCompleted: $isCompleted}';
   }
 }
+
+

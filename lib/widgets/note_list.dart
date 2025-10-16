@@ -16,6 +16,16 @@ class NoteList extends StatelessWidget {
     required this.onToggleComplete,
   });
 
+    static const Map<String, Color> _colorMap = {
+    "Red": Colors.red,
+    "Blue": Colors.blue,
+    "Green": Colors.green,
+    "Yellow": Colors.yellow,
+    "Purple": Colors.purple,
+    "Orange": Colors.orange,
+    "Grey": Colors.grey,
+  };
+
   @override
   Widget build(BuildContext context) {
     if (notes.isEmpty) {
@@ -67,11 +77,11 @@ class NoteList extends StatelessWidget {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Batal'),
+                  child: const Text('Cancel'),
                 ),
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Hapus'),
+                  child: const Text('Delete'),
                 ),
               ],
             );
@@ -81,7 +91,7 @@ class NoteList extends StatelessWidget {
       onDismissed: (direction) {
         onDelete(note);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Catatan dihapus')),
+          const SnackBar(content: Text('Note Deleted')),
         );
       },
       child: Card(
@@ -180,7 +190,7 @@ class NoteList extends StatelessWidget {
                     Icon(Icons.access_time, size: 12, color: Colors.grey[600]),
                     const SizedBox(width: 6),
                     Text(
-                      'Dibuat: ${_formatDate(note.createdAt)}',
+                      'Created: ${_formatDate(note.createdAt)}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[700],
@@ -195,7 +205,7 @@ class NoteList extends StatelessWidget {
                     Icon(Icons.update, size: 12, color: Colors.grey[600]),
                     const SizedBox(width: 6),
                     Text(
-                      'Diupdate: ${_formatDate(note.updatedAt)}',
+                      'Updated: ${_formatDate(note.updatedAt)}',
                       style: TextStyle(
                         fontSize: 13,
                         color: Colors.grey[700],
@@ -249,13 +259,20 @@ class NoteList extends StatelessWidget {
     );
   }
 
-  Color _getColorFromHex(String hexColor) {
-    hexColor = hexColor.replaceAll("#", "");
+  Color _getColorFromHex(String color) {
+  // Kalau dia HEX valid
+  if (color.startsWith("#")) {
+    String hexColor = color.replaceAll("#", "");
     if (hexColor.length == 6) {
-      hexColor = "FF$hexColor";
+      hexColor = "FF$hexColor"; // tambahin alpha
     }
     return Color(int.parse("0x$hexColor"));
   }
+
+  // Kalau dia nama warna
+  return _colorMap[color] ?? Colors.grey; // fallback ke grey
+}
+
 
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}';
@@ -271,7 +288,7 @@ class NoteList extends StatelessWidget {
               Icon(Icons.warning, color: Colors.orange, size: 28),
               SizedBox(width: 12),
               Text(
-                'Konfirmasi Hapus',
+                'You sure wanna delete it?',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
             ],
@@ -281,7 +298,7 @@ class NoteList extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Apakah Anda yakin ingin menghapus catatan ini?',
+                'Are you really sure want to delete this note? Really??',
                 style: TextStyle(fontSize: 16),
               ),
               const SizedBox(height: 16),
@@ -319,7 +336,7 @@ class NoteList extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'Aksi ini tidak dapat dibatalkan.',
+                'This action cannot be refused.',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.red,
@@ -337,7 +354,7 @@ class NoteList extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
-                'Batal',
+                'Cancel',
                 style: TextStyle(fontSize: 16),
               ),
             ),
@@ -353,7 +370,7 @@ class NoteList extends StatelessWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Catatan "${note.title}" dihapus',
+                            'The "${note.title}" deleted',
                             style: const TextStyle(fontSize: 16),
                           ),
                         ),
@@ -371,7 +388,7 @@ class NoteList extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: const Text(
-                'Hapus',
+                'Delete',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ),

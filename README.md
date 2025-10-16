@@ -1,16 +1,40 @@
-# flutter_application_13
+# Noted - Flutter
 
-A new Flutter project.
+A simple and intuitive **Notes App** built with **Flutter** for managing your daily notes. This app allows users to create, edit, delete, and categorize notes effortlessly.
+
+---
+
+## Features
+
+- Create, read, update, and delete notes (CRUD)
+- Organize notes using categories/tags
+- Search notes by title or content
+- Smooth and responsive Flutter UI
+- Local storage using SQLite (`sqflite`) for offline support
+- Lightweight and fast
+
+---
+
+## Screenshots
+
+![Home Screen](assets/screenshots/home.png)
+![Add Note](assets/screenshots/add_note.png)
+![Note Detail](assets/screenshots/note_detail.png)
+
+---
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Prerequisites
 
-A few resources to get you started if this is your first Flutter project:
+- [Flutter](https://flutter.dev/docs/get-started/install) >= 3.0
+- Android Studio / VS Code
+- Emulator or physical device
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Installation
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+1. Clone the repository:
+
+```bash
+git clone https://github.com/username/notes_app_flutter.git
+cd notes_app_flutter
