@@ -2,17 +2,38 @@ import 'package:flutter/material.dart';
 import 'package:todo_app/core/extension.dart';
 import '../models/note.dart';
 import '../database/database_helper.dart';
-import '../widgets/note_list.dart';
 import '../widgets/loading_indicator.dart';
 import 'add_edit_note_screen.dart';
 import 'note_detail_screen.dart';
 import '../widgets/category_chips.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
+}
+
+Color _getColorFromHex(String? color) {
+  if (color == null || color.isEmpty) return Colors.grey;
+
+  try {
+    String hexColor = color.toUpperCase().replaceAll("#", "");
+
+    if (hexColor.startsWith("0X")) {
+      return Color(int.parse(hexColor));
+    }
+
+    if (hexColor.length == 6) {
+      hexColor = "FF$hexColor";
+    }
+
+    return Color(int.parse("0x$hexColor"));
+  } catch (e) {
+    debugPrint("Color parse error: $e");
+    return Colors.grey;
+  }
 }
 
 class _HomeScreenState extends State<HomeScreen> {
@@ -27,10 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadNotes() async {
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final notes = await _databaseHelper.getNotes();
       setState(() {
@@ -38,31 +56,23 @@ class _HomeScreenState extends State<HomeScreen> {
         _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      _showError('Gagal memuat catatan: $e');
+      setState(() => _isLoading = false);
+      _showError('Failed to load notes: $e');
     }
   }
 
   Future<void> _addOrEditNote({Note? note}) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => AddEditNoteScreen(note: note),
-      ),
+      MaterialPageRoute(builder: (context) => AddEditNoteScreen(note: note)),
     );
 
     if (result != null && result is Note && mounted) {
       if (note == null) {
-        // Tambah note baru
         final id = await _databaseHelper.insertNote(result);
         result.id = id;
-        setState(() {
-          _notes.add(result);
-        });
+        setState(() => _notes.add(result));
         _showSuccess('✅ Note Created');
       } else {
-        // Edit note
         await _databaseHelper.updateNote(result);
         setState(() {
           final index = _notes.indexWhere((n) => n.id == result.id);
@@ -73,20 +83,26 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-    Future<void> _deleteAllNotes() async {
+  Future<void> _deleteAllNotes() async {
     if (_notes.isEmpty) {
-      _showError("Tidak ada catatan untuk dihapus");
+      _showError("There are no notes to delete");
       return;
     }
 
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete All Notes?", style: TextStyle(color: Colors.red),),
-        content: const Text("Tindakan ini tidak dapat dibatalkan!"),
+        title: const Text("Delete All Notes?", style: TextStyle(color: Colors.red)),
+        content: const Text("This action cannot be undone!"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal", style: TextStyle(color: Colors.white),)),
-          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text("Hapus Semua", style: TextStyle(color: Colors.red),)),
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Delete All", style: TextStyle(color: Colors.red)),
+          ),
         ],
       ),
     );
@@ -94,69 +110,26 @@ class _HomeScreenState extends State<HomeScreen> {
     if (confirm == true) {
       try {
         await _databaseHelper.deleteAllNotes();
-        setState(() {
-          _notes.clear();
-        });
-        _showSuccess("🗑️ Semua catatan berhasil dihapus");
+        setState(() => _notes.clear());
+        _showSuccess("🗑️ All notes deleted successfully");
       } catch (e) {
-        _showError("Gagal menghapus semua catatan: $e");
+        _showError("Failed to delete all notes: $e");
       }
     }
   }
 
   Future<void> _viewNote(Note note) async {
     final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => NoteDetailScreen(note: note),
-      ),
+      MaterialPageRoute(builder: (context) => NoteDetailScreen(note: note)),
     );
 
     if (result != null && result is String) {
       if (result == 'edit') {
-        _addOrEditNote(note: note); // langsung edit dari detail
+        _addOrEditNote(note: note);
       } else if (result == 'deleted') {
-        setState(() {
-          _notes.removeWhere((n) => n.id == note.id);
-        });
-        _showSuccess('🗑️ Catatan "${note.title}" dihapus');
+        setState(() => _notes.removeWhere((n) => n.id == note.id));
+        _showSuccess('🗑️ Note "${note.title}" deleted');
       }
-    }
-  }
-
-  Future<void> _deleteNote(Note note) async {
-    try {
-      await _databaseHelper.deleteNote(note.id!);
-      setState(() {
-        _notes.removeWhere((n) => n.id == note.id);
-      });
-      _showSuccess('🗑️ Note Deleted');
-    } catch (e) {
-      _showError('Gagal menghapus catatan: $e');
-    }
-  }
-
-  Future<void> _toggleComplete(Note note, bool isCompleted) async {
-    try {
-      final updatedNote = Note(
-        id: note.id,
-        title: note.title,
-        description: note.description,
-        createdAt: note.createdAt,
-        updatedAt: DateTime.now(),
-        isCompleted: isCompleted,
-        imagePath: note.imagePath,
-        label: note.label,
-        color: note.color,
-      );
-
-      await _databaseHelper.updateNote(updatedNote);
-
-      setState(() {
-        final index = _notes.indexWhere((n) => n.id == note.id);
-        if (index != -1) _notes[index] = updatedNote;
-      });
-    } catch (e) {
-      _showError('Gagal mengubah status: $e');
     }
   }
 
@@ -186,12 +159,9 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         leading: const Icon(Icons.menu),
-        title: const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 0),
-          child: Text(
-            'Noted',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
+        title: const Text(
+          'Noted',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         backgroundColor: context.color.secondary,
         foregroundColor: Colors.white,
@@ -205,52 +175,70 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           IconButton(
             icon: const Icon(Icons.refresh, size: 28),
-            onPressed: _loadNotes,
             tooltip: 'Refresh',
+            onPressed: _loadNotes,
           ),
         ],
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const CategoryChips(),
-          Expanded(
-            child: _isLoading
-                ? const LoadingIndicator()
-                : _notes.isEmpty
-                    ? const Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.note_add, size: 80, color: Colors.grey),
-                            SizedBox(height: 24),
-                            Text(
-                              'There is no notes yet',
-                              style: TextStyle(
-                                  fontSize: 22,
-                                  color: Colors.grey,
-                                  fontWeight: FontWeight.w500),
+      body: _isLoading
+          ? const Center(child: LoadingIndicator())
+          : _notes.isEmpty
+              ? const Center(child: Text('No notes yet'))
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const CategoryChips(),
+                    Expanded(
+                      child: MasonryGridView.count(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        padding: const EdgeInsets.all(12),
+                        itemCount: _notes.length,
+                        itemBuilder: (context, index) {
+                          final note = _notes[index];
+                          return GestureDetector(
+                            onTap: () => _viewNote(note),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _getColorFromHex(note.color).withOpacity(0.4),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    note.title,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                        fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    note.description,
+                                    maxLines: 6,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Align(
+                                    alignment: Alignment.bottomRight,
+                                    child: Text(
+                                      note.updatedAt.toLocal().toString().split(' ')[0],
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.black54),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Add a note by tap on the + button below',
-                              style: TextStyle(fontSize: 16, color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadNotes,
-                        child: NoteList(
-                          notes: _notes,
-                          onTap: _viewNote,
-                          onDelete: _deleteNote,
-                          onToggleComplete: _toggleComplete,
-                        ),
+                          );
+                        },
                       ),
-          ),
-        ],
-      ),
+                    ),
+                  ],
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _addOrEditNote(),
         backgroundColor: context.color.secondary,

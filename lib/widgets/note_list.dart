@@ -175,7 +175,7 @@ class NoteList extends StatelessWidget {
                       const Icon(Icons.image, size: 16, color: Colors.blue),
                       const SizedBox(width: 6),
                       Text(
-                        'Ada gambar',
+                        'Picture',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.blue[700],

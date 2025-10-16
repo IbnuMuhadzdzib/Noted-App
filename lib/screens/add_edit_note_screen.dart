@@ -75,8 +75,9 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(widget.note != null ? 'Edit Note' : 'Tambah Note'),
+        title: Text(widget.note != null ? 'Edit Note' : 'Add Note'),
         actions: [
           IconButton(icon: const Icon(Icons.save), onPressed: _saveNote),
         ],
@@ -89,17 +90,23 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
             children: [
               TextFormField(
                 controller: _titleController,
-                decoration: const InputDecoration(labelText: 'Judul*'),
+                decoration: const InputDecoration(
+                  labelText: 'Title*',
+                  border: InputBorder.none,
+                  ),
                 validator: (val) =>
-                    val == null || val.trim().isEmpty ? 'Judul tidak boleh kosong' : null,
+                    val == null || val.trim().isEmpty ? "Title can't empty" : null,
               ),
               const SizedBox(height: 16),
               TextFormField(
                 controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Deskripsi*'),
+                decoration: const InputDecoration(
+                  labelText: 'Deskripsi*',
+                  border: InputBorder.none,
+                  ),
                 maxLines: null,
                 validator: (val) =>
-                    val == null || val.trim().isEmpty ? 'Deskripsi tidak boleh kosong' : null,
+                    val == null || val.trim().isEmpty ? "Description can't empty" : null,
               ),
               const SizedBox(height: 16),
               ListTile(
