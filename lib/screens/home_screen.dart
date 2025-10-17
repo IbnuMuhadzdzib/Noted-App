@@ -83,41 +83,109 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _showConfirmBottomSheet({
+    required String title,
+    required String message,
+    required VoidCallback onConfirm,
+  }) async {
+    await showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Wrap(
+          runSpacing: 12,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 10),
+                decoration: BoxDecoration(
+                  color: Colors.grey[400],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+            Text(
+              title,
+              style: const TextStyle(
+                  fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
+            ),
+            Text(message, style: const TextStyle(fontSize: 15)),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text("Cancel"),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      onConfirm();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text("Delete",
+                        style: TextStyle(color: Colors.white)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteNote(Note note) async {
+    await _showConfirmBottomSheet(
+      title: "Delete Note?",
+      message: "Are you sure you want to delete '${note.title}'?",
+      onConfirm: () async {
+        try {
+          await _databaseHelper.deleteNote(note.id!);
+          setState(() => _notes.removeWhere((n) => n.id == note.id));
+          _showSuccess('🗑️ Note "${note.title}" deleted');
+        } catch (e) {
+          _showError('Failed to delete note: $e');
+        }
+      },
+    );
+  }
+
   Future<void> _deleteAllNotes() async {
     if (_notes.isEmpty) {
       _showError("There are no notes to delete");
       return;
     }
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("Delete All Notes?",
-            style: TextStyle(color: Colors.red)),
-        content: const Text("This action cannot be undone!"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text("Cancel", style: TextStyle(color: Colors.white)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child:
-                const Text("Delete All", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
+    await _showConfirmBottomSheet(
+      title: "Delete All Notes?",
+      message: "This action can't be undone?",
+      onConfirm: () async {
+        try {
+          await _databaseHelper.deleteAllNotes();
+          setState(() => _notes.clear());
+          _showSuccess('🗑️ All Notes was deleted');
+        } catch (e) {
+          _showError('Failed to delete note: $e');
+        }
+      },
     );
-
-    if (confirm == true) {
-      try {
-        await _databaseHelper.deleteAllNotes();
-        setState(() => _notes.clear());
-        _showSuccess("🗑️ All notes deleted successfully");
-      } catch (e) {
-        _showError("Failed to delete all notes: $e");
-      }
-    }
   }
 
   Future<void> _viewNote(Note note) async {
@@ -211,22 +279,39 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 2),
-                                        margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(4),
-                                      color: _getColorFromHex(note.color),
-                                    ),
-                                    child: Text(
-                                      note.label,
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w500,
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10, vertical: 2),
+                                        margin:
+                                            const EdgeInsets.only(bottom: 12),
+                                        decoration: BoxDecoration(
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          color: _getColorFromHex(note.color),
+                                        ),
+                                        child: Text(
+                                          note.label,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                      IconButton(
+                                        icon: const Icon(Icons.delete_outline,
+                                            size: 20, color: Colors.red),
+                                        padding: EdgeInsets.zero,
+                                        constraints: const BoxConstraints(),
+                                        onPressed: () => _deleteNote(note),
+                                      ),
+                                    ],
                                   ),
                                   Text(
                                     note.title,
