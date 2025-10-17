@@ -48,7 +48,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Detail Note'),
+        title: const Text('Note Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.edit),

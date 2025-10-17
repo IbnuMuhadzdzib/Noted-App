@@ -101,7 +101,7 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Deskripsi*',
+                  labelText: 'Description*',
                   border: InputBorder.none,
                   ),
                 maxLines: null,

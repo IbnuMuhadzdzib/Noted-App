@@ -92,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Delete All Notes?", style: TextStyle(color: Colors.red)),
+        title: const Text("Delete All Notes?",
+            style: TextStyle(color: Colors.red)),
         content: const Text("This action cannot be undone!"),
         actions: [
           TextButton(
@@ -101,7 +102,8 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Delete All", style: TextStyle(color: Colors.red)),
+            child:
+                const Text("Delete All", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -201,19 +203,38 @@ class _HomeScreenState extends State<HomeScreen> {
                             onTap: () => _viewNote(note),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: _getColorFromHex(note.color).withOpacity(0.4),
+                                color: _getColorFromHex(note.color)
+                                    .withOpacity(0.4),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               padding: const EdgeInsets.all(12),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10, vertical: 2),
+                                        margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(4),
+                                      color: _getColorFromHex(note.color),
+                                    ),
+                                    child: Text(
+                                      note.label,
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
                                   Text(
                                     note.title,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        fontSize: 16, fontWeight: FontWeight.bold),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
@@ -225,7 +246,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Align(
                                     alignment: Alignment.bottomRight,
                                     child: Text(
-                                      note.updatedAt.toLocal().toString().split(' ')[0],
+                                      note.updatedAt
+                                          .toLocal()
+                                          .toString()
+                                          .split(' ')[0],
                                       style: const TextStyle(
                                           fontSize: 12, color: Colors.black54),
                                     ),
@@ -240,6 +264,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
       floatingActionButton: FloatingActionButton(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100),
+        ),
         onPressed: () => _addOrEditNote(),
         backgroundColor: context.color.secondary,
         child: const Icon(Icons.add),

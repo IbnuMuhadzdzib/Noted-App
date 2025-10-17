@@ -88,6 +88,7 @@ class _NotePreferenceScreenState extends State<NotePreferenceScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text("Note Preferences"),
         actions: [
@@ -136,7 +137,7 @@ class _NotePreferenceScreenState extends State<NotePreferenceScreen> {
                 children: [
                   ListTile(
                     leading: const Icon(Icons.image),
-                    title: const Text("Gambar"),
+                    title: const Text("Picture"),
                     trailing: IconButton(
                       icon: const Icon(Icons.arrow_forward),
                       onPressed: _pickImage,

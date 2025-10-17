@@ -312,6 +312,20 @@ class NoteList extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: _getColorFromHex(note.color),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Text(
+                        note.label,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                     Text(
                       note.title,
                       style: const TextStyle(
