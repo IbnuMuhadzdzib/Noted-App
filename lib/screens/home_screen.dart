@@ -304,12 +304,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                           ),
                                         ),
                                       ),
-                                      IconButton(
+                                      Transform.translate(offset: const Offset(8, -12),
+                                        child: IconButton(
                                         icon: const Icon(Icons.delete_outline,
                                             size: 20, color: Colors.red),
                                         padding: EdgeInsets.zero,
                                         constraints: const BoxConstraints(),
                                         onPressed: () => _deleteNote(note),
+                                      ),
                                       ),
                                     ],
                                   ),
