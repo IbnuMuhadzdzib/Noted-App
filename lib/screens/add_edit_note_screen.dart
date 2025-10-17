@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../models/note.dart';
 import 'note_preference.dart';
@@ -16,7 +17,9 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
+  final List<TextEditingController> _todoControllers = [];
   late Note _note;
+  bool isTodoList = false;
 
   @override
   void initState() {
@@ -31,12 +34,24 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
 
     _titleController.text = _note.title;
     _descriptionController.text = _note.description;
+    isTodoList = _note.isTodo;
+
+    if (_note.todoItems != null && _note.todoItems!.isNotEmpty) {
+      for (var item in _note.todoItems!) {
+        _todoControllers.add(TextEditingController(text: item));
+      }
+    } else {
+      _todoControllers.add(TextEditingController());
+    }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    for (var controller in _todoControllers) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
@@ -65,11 +80,35 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
   void _saveNote() {
     if (_formKey.currentState!.validate()) {
       _note.title = _titleController.text.trim();
-      _note.description = _descriptionController.text.trim();
       _note.updatedAt = DateTime.now();
+      _note.isTodo = isTodoList;
 
-      Navigator.pop(context, _note); // kirim Note ke HomeScreen
+      if (isTodoList) {
+        _note.todoItems = _todoControllers
+            .map((controller) => controller.text.trim())
+            .where((text) => text.isNotEmpty)
+            .toList();
+        _note.todoCompleted =
+            List.generate(_note.todoItems!.length, (index) => false);
+        _note.description = _note.todoItems!.join('\n');
+      } else {
+        _note.description = _descriptionController.text.trim();
+      }
+
+      Navigator.pop(context, _note);
     }
+  }
+
+  void _addTodoField() {
+    setState(() {
+      _todoControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeTodoField(int index) {
+    setState(() {
+      _todoControllers.removeAt(index);
+    });
   }
 
   @override
@@ -88,33 +127,82 @@ class _AddEditNoteScreenState extends State<AddEditNoteScreen> {
           key: _formKey,
           child: ListView(
             children: [
+              Row(
+                children: [
+                  const Text('To-Do List'),
+                  const SizedBox(width: 8),
+                  Switch(
+                    value: isTodoList,
+                    onChanged: (val) => setState(() => isTodoList = val),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _titleController,
                 decoration: const InputDecoration(
                   labelText: 'Title*',
                   border: InputBorder.none,
-                  ),
-                validator: (val) =>
-                    val == null || val.trim().isEmpty ? "Title can't empty" : null,
+                ),
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? "Title can't be empty"
+                    : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(
-                  labelText: 'Description*',
-                  border: InputBorder.none,
+              if (!isTodoList)
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: const InputDecoration(
+                    labelText: 'Description*',
+                    border: InputBorder.none,
                   ),
-                maxLines: null,
-                validator: (val) =>
-                    val == null || val.trim().isEmpty ? "Description can't empty" : null,
-              ),
+                  maxLines: null,
+                  validator: (val) => val == null || val.trim().isEmpty
+                      ? "Description can't be empty"
+                      : null,
+                )
+              else
+                Column(
+                  children: [
+                    for (int i = 0; i < _todoControllers.length; i++)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              controller: _todoControllers[i],
+                              decoration: InputDecoration(
+                                labelText: 'Task ${i + 1}',
+                              ),
+                              validator: (val) => val == null ||
+                                      val.trim().isEmpty
+                                  ? "Task can't be empty"
+                                  : null,
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.remove_circle_outline,
+                                color: Colors.red),
+                            onPressed: () => _removeTodoField(i),
+                          )
+                        ],
+                      ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: _addTodoField,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Add Task'),
+                    ),
+                  ],
+                ),
               const SizedBox(height: 16),
               ListTile(
                 leading: const Icon(Icons.settings),
                 title: const Text("Preference"),
-                subtitle: Text("Tag: ${_note.label}, Color: ${_note.color}"),
+                subtitle:
+                    Text("Tag: ${_note.label}, Color: ${_note.color}"),
                 trailing: _note.imagePath != null
-                    ? Image.file(File(_note.imagePath!), width: 40, height: 40, fit: BoxFit.cover)
+                    ? Image.file(File(_note.imagePath!),
+                        width: 40, height: 40, fit: BoxFit.cover)
                     : const Icon(Icons.arrow_forward),
                 onTap: _openPreference,
               ),

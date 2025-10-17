@@ -15,30 +15,42 @@ class DatabaseHelper {
     return _database!;
   }
 
-  Future<Database> _initDb() async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'notes.db');
+ Future<Database> _initDb() async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'notes.db');
 
-    return openDatabase(
-      path,
-      version: 1,
-      onCreate: (db, version) async {
-        await db.execute('''
-          CREATE TABLE notes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            description TEXT,
-            created_at INTEGER,
-            updated_at INTEGER,
-            is_completed INTEGER,
-            image_path TEXT,
-            label TEXT,
-            color INTEGER
-          )
-        ''');
-      },
-    );
-  }
+  return openDatabase(
+    path,
+    version: 2, // ubah versi ke 2 biar onUpgrade jalan
+    onCreate: (db, version) async {
+      await db.execute('''
+        CREATE TABLE notes (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          title TEXT,
+          description TEXT,
+          created_at INTEGER,
+          updated_at INTEGER,
+          is_completed INTEGER,
+          image_path TEXT,
+          label TEXT,
+          color TEXT,
+          is_todo INTEGER,
+          todo_items TEXT,
+          todo_completed TEXT
+        )
+      ''');
+    },
+    onUpgrade: (db, oldVersion, newVersion) async {
+      if (oldVersion < 2) {
+        // Tambahin kolom baru kalau belum ada
+        await db.execute('ALTER TABLE notes ADD COLUMN is_todo INTEGER DEFAULT 0');
+        await db.execute('ALTER TABLE notes ADD COLUMN todo_items TEXT');
+        await db.execute('ALTER TABLE notes ADD COLUMN todo_completed TEXT');
+      }
+    },
+  );
+}
+
 
   Future<int> insertNote(Note note) async {
     final db = await database;

@@ -223,6 +223,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  void _toggleTask(Note note, int index, bool value) {
+    setState(() {
+      note.todoCompleted?[index] = value;
+      note.isCompleted = note.todoCompleted?.every((e) => e == true) ?? false;
+    });
+  }
+
+  void _toggleAllTasks(Note note, bool value) {
+    setState(() {
+      note.isCompleted = value;
+      note.todoCompleted =
+          List.generate(note.todoItems?.length ?? 0, (_) => value);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -230,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         leading: const Icon(Icons.menu),
         title: const Text(
-          'Noted',
+          '',
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         backgroundColor: context.color.secondary,
@@ -285,33 +300,57 @@ class _HomeScreenState extends State<HomeScreen> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 10, vertical: 2),
-                                        margin:
-                                            const EdgeInsets.only(bottom: 12),
-                                        decoration: BoxDecoration(
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                          color: _getColorFromHex(note.color),
-                                        ),
-                                        child: Text(
-                                          note.label,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w500,
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                                horizontal: 10, vertical: 2),
+                                            margin: const EdgeInsets.only(
+                                                bottom: 12),
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                              color:
+                                                  _getColorFromHex(note.color),
+                                            ),
+                                            child: Text(
+                                              note.label,
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Transform.translate(
+                                            offset: const Offset(-10, -13),
+                                            child: Checkbox(
+                                              value: note.isCompleted,
+                                              onChanged: (val) =>
+                                                  _toggleAllTasks(
+                                                      note, val ?? false),
+                                              activeColor:
+                                                  _getColorFromHex(note.color),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Expanded(
+                                        child: Transform.translate(
+                                          offset: const Offset(8, -12),
+                                          child: IconButton(
+                                            icon: const Icon(
+                                                Icons.delete_outline,
+                                                size: 20,
+                                                color: Colors.red),
+                                            padding: EdgeInsets.zero,
+                                            constraints: const BoxConstraints(),
+                                            onPressed: () => _deleteNote(note),
                                           ),
                                         ),
-                                      ),
-                                      Transform.translate(offset: const Offset(8, -12),
-                                        child: IconButton(
-                                        icon: const Icon(Icons.delete_outline,
-                                            size: 20, color: Colors.red),
-                                        padding: EdgeInsets.zero,
-                                        constraints: const BoxConstraints(),
-                                        onPressed: () => _deleteNote(note),
-                                      ),
                                       ),
                                     ],
                                   ),
@@ -319,16 +358,55 @@ class _HomeScreenState extends State<HomeScreen> {
                                     note.title,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      decoration: note.isCompleted
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                    ),
                                   ),
                                   const SizedBox(height: 8),
-                                  Text(
-                                    note.description,
-                                    maxLines: 6,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                                  if (note.isTodo && note.todoItems != null)
+                                    ...List.generate(note.todoItems!.length,
+                                        (i) {
+                                      final item = note.todoItems![i];
+                                      final done =
+                                          note.todoCompleted?[i] ?? false;
+                                      return Padding(
+                                        padding: EdgeInsets.symmetric(vertical: 1),
+                                        child: Row(
+                                          children: [
+                                            Checkbox(
+                                              value: done,
+                                              onChanged: (val) => _toggleTask(
+                                                  note, i, val ?? false),
+                                              activeColor:
+                                                  _getColorFromHex(note.color),
+                                              visualDensity:
+                                                  VisualDensity.compact,
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                item,
+                                                style: TextStyle(
+                                                  decoration: done
+                                                      ? TextDecoration
+                                                          .lineThrough
+                                                      : null,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    })
+                                  else
+                                    Text(
+                                      note.description,
+                                      maxLines: 6,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   const SizedBox(height: 6),
                                   Align(
                                     alignment: Alignment.bottomRight,
